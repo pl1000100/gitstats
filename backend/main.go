@@ -38,6 +38,7 @@ func main() {
 
 	mux.HandleFunc("GET /api/v1/repositories/{name}", githubClient.HandleRepositories)
 	mux.HandleFunc("GET /api/v1/stats/{user}/{repo}", count_loc.HandleStats)
+	mux.HandleFunc("GET /api/v1/stats/{user}", count_loc.HandleStatsAll(*githubClient))
 
 	log.Default().Print("Server running")
 	log.Fatal(http.ListenAndServe(c.Port, mux))
