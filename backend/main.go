@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/joho/godotenv"
+	"github.com/pl1000100/gitstats/backend/internal/count_loc"
 	"github.com/pl1000100/gitstats/backend/internal/github"
 )
 
@@ -35,7 +36,8 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("GET /api/v1/repositories/{name}", githubClient.GetRepos)
+	mux.HandleFunc("GET /api/v1/repositories/{name}", githubClient.HandleRepositories)
+	mux.HandleFunc("GET /api/v1/stats/{user}/{repo}", count_loc.HandleStats)
 
 	log.Default().Print("Server running")
 	log.Fatal(http.ListenAndServe(c.Port, mux))

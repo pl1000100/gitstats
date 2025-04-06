@@ -14,7 +14,7 @@ type RepositoriesGitHub []struct {
 	Language string `json:"language"`
 }
 
-func (c *APIClient) GetRepos(w http.ResponseWriter, r *http.Request) {
+func (c *APIClient) HandleRepositories(w http.ResponseWriter, r *http.Request) {
 	user := r.PathValue("name") // TO-DO: validate
 
 	url := fmt.Sprintf("https://api.github.com/users/%s/repos", user)
