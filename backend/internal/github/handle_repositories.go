@@ -10,7 +10,9 @@ import (
 	"github.com/pl1000100/gitstats/backend/utils"
 )
 
-type RepositoriesGitHub []struct {
+type RepositoriesGitHub []RepositoryGitHub
+
+type RepositoryGitHub struct {
 	FullName string `json:"full_name"`
 	Language string `json:"language"`
 }
@@ -32,7 +34,7 @@ func (c *APIClient) GetGitHubRepos(username string) (RepositoriesGitHub, error) 
 	url := fmt.Sprintf("https://api.github.com/users/%s/repos", username)
 	req, err := http.NewRequest("GET", url, nil) // TO-DO: add caching
 	if err != nil {
-		return nil, err
+		return RepositoriesGitHub{}, err
 	}
 	req.Header.Set("Accept", "application/vnd.github+json")
 	req.Header.Set("Authorization", "token "+c.Token)
@@ -41,23 +43,23 @@ func (c *APIClient) GetGitHubRepos(username string) (RepositoriesGitHub, error) 
 	// TO-DO: X-RateLimit-Remaining, X-RateLimit-Reset in response, use to notify user
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return nil, err
+		return RepositoriesGitHub{}, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		errMsg := fmt.Errorf("response code from API: %v", resp.StatusCode)
-		return nil, errMsg
+		return RepositoriesGitHub{}, errMsg
 	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return RepositoriesGitHub{}, err
 	}
 
 	var repos RepositoriesGitHub //TO-DO: pagination handle, default 30 for gh
 	if err := json.Unmarshal(body, &repos); err != nil {
-		return nil, err
+		return RepositoriesGitHub{}, err
 	}
 	return repos, nil
 }

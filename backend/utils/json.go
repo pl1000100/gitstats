@@ -8,8 +8,9 @@ import (
 
 func JsonResponseError(w http.ResponseWriter, s string, e error, status int) {
 	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
 	es := fmt.Sprintf(`{"error":"%s, err %s"}`, s, e)
-	http.Error(w, es, status)
+	w.Write([]byte(es))
 }
 
 func JsonResponse(w http.ResponseWriter, jsonStruct any, status int) {
