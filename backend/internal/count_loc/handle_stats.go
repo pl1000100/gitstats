@@ -9,14 +9,15 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/pl1000100/gitstats/backend/internal/github"
 	"github.com/pl1000100/gitstats/backend/utils"
 )
 
-type Stats []struct {
+type Stats []Stat
+
+type Stat struct {
 	Language    string `json:"language"`
 	Files       int    `json:"files"`
 	Lines       int    `json:"lines"`
@@ -58,7 +59,7 @@ func GetStats(username, repo string) (Stats, error) {
 		return Stats{}, err
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
 	req, err := http.NewRequestWithContext(ctx, "GET", reqURL, nil) // TO-DO: add caching
@@ -100,24 +101,33 @@ func HandleStatsAll(c github.APIClient) func(w http.ResponseWriter, r *http.Requ
 			return
 		}
 
-		var arrStats []Stats
-		var wg sync.WaitGroup
+		// var wg sync.WaitGroup
+		langStats := make(map[string]Stat)
 
 		for _, repo := range repos {
-			wg.Add(1)
-			time.Sleep(5 * time.Second) // GetStats API allows 1req/5s
-			go func(repo github.RepositoryGitHub) {
-				defer wg.Done()
-				s := strings.Split(repo.FullName, "/")
-				stats, err := GetStats(s[0], s[1])
-				if err != nil {
-					log.Printf("Error fetching count-loc: %v", err)
-					return
+			// wg.Add(1)
+			// time.Sleep(6 * time.Second) // GetStats API allows 1req/5s
+			// go func(repo github.RepositoryGitHub) {
+			// 	defer wg.Done()
+			s := strings.Split(repo.FullName, "/")
+			stats, err := GetStats(s[0], s[1])
+			if err != nil {
+				log.Printf("Error fetching count-loc: %v", err)
+				return
+			}
+			for _, st := range stats {
+				langStats[st.Language] = Stat{
+					Files:       langStats[st.Language].Files + st.Files,
+					Lines:       langStats[st.Language].Lines + st.Lines,
+					Blanks:      langStats[st.Language].Blanks + st.Blanks,
+					Comments:    langStats[st.Language].Comments + st.Comments,
+					LinesOfCode: langStats[st.Language].LinesOfCode + st.LinesOfCode,
 				}
-				arrStats = append(arrStats, stats)
-			}(repo)
+			}
+			// }(repo)
 		}
-		wg.Wait()
-		utils.JsonResponse(w, arrStats, http.StatusOK)
+		// wg.Wait()
+
+		utils.JsonResponse(w, langStats, http.StatusOK)
 	}
 }
