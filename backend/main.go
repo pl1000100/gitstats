@@ -4,7 +4,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"path/filepath"
 
 	"github.com/joho/godotenv"
 	"github.com/pl1000100/gitstats/backend/internal/count_loc"
@@ -17,10 +16,8 @@ type Config struct {
 }
 
 func main() {
-	parentDir := filepath.Join(filepath.Dir("."), "..")
-
 	// Load the .env file from the parent directory
-	err := godotenv.Load(filepath.Join(parentDir, ".env"))
+	err := godotenv.Load()
 	// err := godotenv.Load(filepath.Dir("."))
 	if err != nil {
 		log.Fatal("Error loading .env file")
