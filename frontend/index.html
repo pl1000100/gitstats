@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frontend Form</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-xl mx-auto bg-white p-6 rounded-md shadow-md">
+        <h1 class="text-xl font-semibold text-gray-700 mb-4">Fetch Repo Stats</h1>
+        <form id="form">
+            <div class="mb-4">
+                <label for="user" class="block text-gray-700">GitHub User</label>
+                <input type="text" id="user" class="w-full p-2 border border-gray-300 rounded mt-2" placeholder="Enter GitHub username">
+            </div>
+            <div class="mb-4">
+                <label for="repo" class="block text-gray-700">Repository</label>
+                <input type="text" id="repo" class="w-full p-2 border border-gray-300 rounded mt-2" placeholder="Enter repository name">
+            </div>
+            <button type="submit" class="w-full bg-blue-500 text-white p-2 rounded mt-4">Fetch Stats</button>
+        </form>
+
+        <!-- The table will be dynamically populated here -->
+        <div id="response" class="mt-4 overflow-x-auto max-w-full"></div>
+    </div>
+
+    <script>
+        document.getElementById("form").addEventListener("submit", async function (event) {
+            event.preventDefault(); // Prevent the form from submitting the usual way
+            
+            const user = document.getElementById("user").value;
+            const repo = document.getElementById("repo").value;
+
+            // Construct the URL with user and repo parameters
+            const url = `http://localhost:8080/api/v1/stats/${user}/${repo}`;
+
+            try {
+                // Make the GET request to the backend
+                const response = await fetch(url, {
+                    method: 'GET', // This is a GET request
+                });
+
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+                const data = await response.json(); // Parse the JSON response
+
+                // Display the response data as a table
+                document.getElementById("response").innerHTML = generateTable(data);
+
+            } catch (error) {
+                // Handle any errors
+                document.getElementById("response").innerHTML = `
+                    <p class="text-red-500">Error: ${error.message}</p>
+                `;
+            }
+        });
+
+        // Function to generate the table from the response data
+        function generateTable(data) {
+            // Start the table structure
+            let tableHTML = `
+                <table class="min-w-full table-auto bg-white border-collapse border border-gray-300 shadow-lg">
+                    <thead class="bg-gray-200">
+                        <tr>
+                            <th class="border border-gray-300 px-4 py-2 text-left">Language</th>
+                            <th class="border border-gray-300 px-4 py-2 text-left">Files</th>
+                            <th class="border border-gray-300 px-4 py-2 text-left">Lines</th>
+                            <th class="border border-gray-300 px-4 py-2 text-left">Blanks</th>
+                            <th class="border border-gray-300 px-4 py-2 text-left">Comments</th>
+                            <th class="border border-gray-300 px-4 py-2 text-left">Lines of Code</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            // Loop through the data and create rows for each entry
+            data.forEach(item => {
+                tableHTML += `
+                    <tr>
+                        <td class="border border-gray-300 px-4 py-2">${item.language}</td>
+                        <td class="border border-gray-300 px-4 py-2">${item.files}</td>
+                        <td class="border border-gray-300 px-4 py-2">${item.lines}</td>
+                        <td class="border border-gray-300 px-4 py-2">${item.blanks}</td>
+                        <td class="border border-gray-300 px-4 py-2">${item.comments}</td>
+                        <td class="border border-gray-300 px-4 py-2">${item.linesOfCode}</td>
+                    </tr>
+                `;
+            });
+
+            // Close the table structure
+            tableHTML += '</tbody></table>';
+
+            return tableHTML;
+        }
+    </script>
+</body>
+</html>
